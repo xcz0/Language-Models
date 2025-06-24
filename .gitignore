@@ -76,6 +76,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+/notebooks
 .ipynb_checkpoints
 
 # IPython
@@ -194,5 +195,3 @@ cython_debug/
 .cursorindexingignore
 
 /data
-
-/notebooks
