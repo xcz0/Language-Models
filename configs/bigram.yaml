@@ -1,0 +1,26 @@
+# configs/bigram.yaml
+
+# --- Data Configuration ---
+data_path: "data/poetry.json"
+tokenizer_path: "data/tokenizer.json"
+
+# --- Model Configuration ---
+model_params:
+  name: "bigram"
+  # Bigram 模型没有其他超参数
+
+# --- Training Parameters ---
+training_params:
+  batch_size: 64
+  context_window: 128
+  learning_rate: 0.001
+
+# --- PyTorch Lightning Trainer Configuration ---
+trainer_params:
+  max_epochs: 20
+  accelerator: "auto" 
+  devices: 1
+  # 使用 float32 精度，对于小模型足够了
+  precision: 32 
+  # 添加日志记录器，方便使用 tensorboard
+  logger: true 

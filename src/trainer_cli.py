@@ -2,19 +2,22 @@
 
 import yaml
 from pprint import pprint
-import torch
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from src.data_module import PoetryDataModule
-# 在下一阶段，我们将取消下面这些行的注释
-# import pytorch_lightning as pl
-# from src.lit_language_model import LitLanguageModel
-# from src.models.bigram import BigramModel # 举例
+from src.lit_language_model import LitLanguageModel
+from src.model import MODEL_REGISTRY
 
 
 def run_training(config_path: str, test_data_only: bool = False):
     """
     'train' 命令的核心逻辑。
-    加载配置, 初始化数据模块, 并根据标志决定是仅测试数据流还是启动完整训练。
+    加载配置, 初始化所有模块, 并启动训练。
+
+    Args:
+        config_path: 配置文件路径
+        test_data_only: 如果为 True，只运行数据管道验证然后退出
     """
     # 1. 加载配置文件
     print(f"Loading configuration from {config_path}...")
@@ -32,63 +35,52 @@ def run_training(config_path: str, test_data_only: bool = False):
         batch_size=config["training_params"]["batch_size"],
         context_window=config["training_params"]["context_window"],
     )
-
-    # 3. 如果只是测试数据流，则执行验证并退出
-    if test_data_only:
-        print("Running in --test-data mode. Verifying data pipeline...")
-        _verify_data_pipeline(data_module, config)
-        return
-
-    # --- 完整的训练流程 (将在第二阶段完成) ---
-    print("\nSetting up for a full training run...")
-
-    # 这里是为下一阶段准备的占位符
-    print("TODO: Instantiate Model (e.g., BigramModel)")
-    print("TODO: Instantiate LightningModule (LitLanguageModel)")
-    print("TODO: Instantiate Lightning Trainer")
-    print("TODO: Call trainer.fit()")
-
-    print("\n✅ Full training script setup is ready for Phase 2.")
-
-
-def _verify_data_pipeline(data_module: PoetryDataModule, config: dict):
-    """
-    一个私有辅助函数，封装了数据验证的逻辑。
-    """
+    # 必须先运行 setup 来创建分词器和词汇表
     data_module.prepare_data()
     data_module.setup()
-    print("-" * 30)
 
-    print("Fetching one training batch to verify...")
-    try:
-        train_loader = data_module.train_dataloader()
-        x_batch, y_batch = next(iter(train_loader))
-    except Exception as e:
-        print(f"Error fetching batch: {e}")
-        print("Please check your DataLoader and Dataset implementation.")
+    # 如果只是测试数据管道，在这里退出
+    if test_data_only:
+        print("\n✅ Data pipeline verification completed successfully!")
+        print(f"Tokenizer vocab size: {data_module.tokenizer.vocab_size}")
+        print("Exiting as requested (--test-data flag was used).")
         return
 
-    print(f"Batch fetched successfully!")
-    print(f"Shape of X (inputs): {x_batch.shape}")
-    print(f"Shape of Y (targets): {y_batch.shape}")
+    # 3. 初始化模型
+    print("\nInitializing Model...")
+    model_name = config["model_params"]["name"]
+    ModelClass = MODEL_REGISTRY.get(model_name)
+    if not ModelClass:
+        raise ValueError(
+            f"Model '{model_name}' not found in registry. Available: {list(MODEL_REGISTRY.keys())}"
+        )
 
-    context_window = config["training_params"]["context_window"]
-    batch_size = config["training_params"]["batch_size"]
+    # 从 data_module 获取 vocab_size
+    vocab_size = data_module.tokenizer.vocab_size
+    model = ModelClass(vocab_size=vocab_size)
+    print(f"Model '{model_name}' with vocab_size={vocab_size} initialized.")
 
-    # 动态调整预期的批次大小，以防最后一个批次不完整
-    effective_batch_size = x_batch.shape[0]
-    expected_shape = (effective_batch_size, context_window)
-
-    assert x_batch.shape == expected_shape, (
-        f"X shape mismatch! Expected {expected_shape}, got {x_batch.shape}"
+    # 4. 初始化 LightningModule
+    print("\nInitializing LightningModule...")
+    lit_model = LitLanguageModel(
+        model, learning_rate=config["training_params"]["learning_rate"]
     )
-    assert y_batch.shape == expected_shape, (
-        f"Y shape mismatch! Expected {expected_shape}, got {y_batch.shape}"
+
+    # 5. 初始化 Trainer
+    print("\nInitializing Trainer...")
+    # 设置模型检查点回调，只保存效果最好的模型
+    checkpoint_callback = ModelCheckpoint(
+        dirpath="checkpoints/",
+        filename=f"{model_name}-{{epoch:02d}}-{{val_loss:.2f}}",
+        save_top_k=1,
+        verbose=True,
+        monitor="val_loss",
+        mode="min",
     )
-    assert torch.equal(x_batch[0, 1:], y_batch[0, :-1])
 
-    print("\nDecoded example from batch:")
-    print("Input (x): ", data_module.tokenizer.decode(x_batch[0].tolist()))
-    print("Target (y):", data_module.tokenizer.decode(y_batch[0].tolist()))
+    trainer = pl.Trainer(**config["trainer_params"], callbacks=[checkpoint_callback])
 
-    print("\n✅ Data pipeline verification successful!")
+    # 6. 启动训练！
+    print("\n🚀 Starting training! 🚀")
+    trainer.fit(model=lit_model, datamodule=data_module)
+    print("\n✅ Training finished!")
