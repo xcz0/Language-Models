@@ -1,91 +1,87 @@
 # src/data_module.py
 
-import json
-import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from typing import Optional
 
 from src.tokenizer import CharTokenizer
+from src.data_processor import PoetryDataProcessor
 
 
 class PoetryDataModule(LightningDataModule):
     def __init__(
-        self, data_path: str, tokenizer_path: str, batch_size: int, context_window: int
+        self,
+        data_path: str,
+        tokenizer_path: str,
+        batch_size: int,
+        context_window: int,
+        rate: Optional[float] = 0.9,
     ):
         super().__init__()
         self.data_path = data_path
         self.tokenizer_path = tokenizer_path
         self.batch_size = batch_size
         self.context_window = context_window
+        self.rate = rate
 
         # 保存超参数，这使得在checkpoint中可以访问它们
         self.save_hyperparameters()
 
+        # 初始化数据处理器和分词器
+        self.data_processor = PoetryDataProcessor(data_path, tokenizer_path)
         self.tokenizer = CharTokenizer()
-        self.full_text = ""
         self.encoded_data = None
 
     def prepare_data(self):
         """
-        在单个进程上执行的操作：下载、分词等。
-        这里我们用来构建和保存分词器词汇表。
+        在单个进程上执行的操作：数据清洗、分词器构建等。
+        使用PoetryDataProcessor来处理数据清洗任务。
         """
-        # 1. 从JSON加载所有诗歌内容
-        with open(self.data_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        print("开始数据预处理...")
 
-        # 2. 将所有诗歌的 'contents' 字段拼接成一个大字符串
-        self.full_text = "\n".join([item["contents"] for item in data])
+        # 使用数据处理器加载和清洗数据
+        raw_data = self.data_processor.load_raw_data()
+        poetry_contents = self.data_processor.extract_poetry_content(raw_data)
 
-        # 3. 基于全量文本构建分词器并保存
-        print("Fitting tokenizer...")
-        self.tokenizer.fit(self.full_text)
-        self.tokenizer.save(self.tokenizer_path)
+        # 打印数据统计信息
+        stats = self.data_processor.get_data_stats(poetry_contents)
+        print("数据统计信息:")
+        for key, value in stats.items():
+            print(f"  {key}: {value}")
+
+        # 合并文本并构建分词器
+        full_text = self.data_processor.combine_texts(poetry_contents)
+        self.data_processor.build_and_save_tokenizer(full_text)
+
+        print("数据预处理完成！")
 
     def setup(self, stage: Optional[str] = None):
         """
         在所有进程上执行的操作：加载分词器、创建数据集、执行拆分。
         """
-        # 1. 加载分词器和全量文本（如果在不同进程中 prepare_data 未运行）
-        self.tokenizer.load(self.tokenizer_path)
-        if not self.full_text:
-            with open(self.data_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            self.full_text = "\n".join([item["contents"] for item in data])
+        print("开始数据集设置...")
 
-        # 2. 将整个文本编码成一个大的整数列表
-        self.encoded_data = torch.tensor(
-            self.tokenizer.encode(self.full_text), dtype=torch.long
+        # 1. 加载分词器
+        self.tokenizer = self.data_processor.load_tokenizer()
+
+        # 2. 重新加载和处理数据（如果prepare_data在不同进程中未运行）
+        raw_data = self.data_processor.load_raw_data()
+        poetry_contents = self.data_processor.extract_poetry_content(raw_data)
+        full_text = self.data_processor.combine_texts(poetry_contents)
+
+        # 3. 编码文本
+        self.encoded_data = self.data_processor.encode_text(full_text)
+
+        # 4. 创建序列对
+        X, Y = self.data_processor.create_sequences(
+            self.encoded_data, self.context_window
         )
 
-        # 3. 创建输入(x)和目标(y)
-        # 我们的目标是预测下一个字符，所以 y 是 x 向左移动一个位置
-        # 例如，如果 context_window=4, x=[0,1,2,3], y=[1,2,3,4]
-        num_sequences = len(self.encoded_data) - self.context_window
-
-        # 我们需要创建一个包含 (x, y) 对的数据集
-        # 这里为了简化，我们直接在 DataLoader 中使用一个简单的 TensorDataset
-        # 注意：这里我们还没有进行训练/验证集划分，将在后续实现
-        # 为了演示，我们先使用全量数据
-        X = torch.stack(
-            [
-                self.encoded_data[i : i + self.context_window]
-                for i in range(num_sequences)
-            ]
-        )
-        Y = torch.stack(
-            [
-                self.encoded_data[i + 1 : i + self.context_window + 1]
-                for i in range(num_sequences)
-            ]
-        )
-
-        # 4. 创建数据集并进行拆分
+        # 5. 创建数据集并进行拆分
         dataset = TensorDataset(X, Y)
 
         # 90% 训练, 10% 验证
-        train_size = int(0.9 * len(dataset))
+        train_size = int(self.rate * len(dataset))
         val_size = len(dataset) - train_size
         self.train_dataset, self.val_dataset = random_split(
             dataset, [train_size, val_size]
@@ -94,6 +90,7 @@ class PoetryDataModule(LightningDataModule):
         print(f"Total sequences: {len(dataset)}")
         print(f"Training sequences: {len(self.train_dataset)}")
         print(f"Validation sequences: {len(self.val_dataset)}")
+        print("数据集设置完成！")
 
     def train_dataloader(self):
         return DataLoader(
