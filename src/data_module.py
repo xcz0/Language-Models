@@ -4,8 +4,8 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from typing import Optional
 
-from src.tokenizer import CharTokenizer
-from src.data_processor import PoetryDataProcessor
+from src.data_pipeline.tokenization.char_tokenizer import CharTokenizer
+from src.data.data_processor import PoetryDataProcessor
 
 
 class PoetryDataModule(LightningDataModule):
