@@ -11,3 +11,6 @@ import logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
+# 暴露主要功能函数
+__all__ = ["create_data_processor", "create_text_cleaner", "CharTokenizer"]

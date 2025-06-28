@@ -2,7 +2,10 @@
 
 # --- Data Configuration ---
 data_path: "data/poetry.json"
-tokenizer_path: "data/tokenizer.json" # 保存/加载分词器词汇表的位置
+tokenizer_path: "data/tokenizer.pkl"
+processed_data_path: "data/processed_data.pkl"
+cleaner_type: "poetry"
+content_field: "contents"
 
 # --- Training Parameters ---
 # 我们将在后续阶段使用这些参数
@@ -15,5 +18,5 @@ training_params:
 trainer_params:
   max_epochs: 100
   # 如果你有GPU，可以改为1, 2, ...
-  accelerator: "cpu" # or "gpu"
+  accelerator: "auto" # or "gpu"
   devices: 1

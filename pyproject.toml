@@ -8,6 +8,7 @@ dependencies = [
     "lightning>=2.5.2",
     "optuna>=4.4.0",
     "pyyaml>=6.0.2",
+    "regex>=2024.11.6",
     "torch",
     "torchaudio",
     "torchvision",

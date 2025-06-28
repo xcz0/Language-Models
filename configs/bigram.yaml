@@ -2,7 +2,10 @@
 
 # --- Data Configuration ---
 data_path: "data/poetry.json"
-tokenizer_path: "data/tokenizer.json"
+tokenizer_path: "data/tokenizer.pkl"
+processed_data_path: "data/processed_data.pkl"
+cleaner_type: "poetry"
+content_field: "contents"
 
 # --- Model Configuration ---
 model_params:
