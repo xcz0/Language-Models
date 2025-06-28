@@ -1,9 +1,8 @@
 # data_pipeline/__init__.py
 
 # 暴露顶层接口，方便用户使用
-from .processing import create_data_processor
+from .processor import create_data_processor
 from .cleaners import create_text_cleaner
-from .tokenization import CharTokenizer
 
 # 配置日志
 import logging
@@ -13,4 +12,4 @@ logging.basicConfig(
 )
 
 # 暴露主要功能函数
-__all__ = ["create_data_processor", "create_text_cleaner", "CharTokenizer"]
+__all__ = ["create_data_processor", "create_text_cleaner"]

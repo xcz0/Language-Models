@@ -4,4 +4,9 @@ from .base_tokenizer import BaseTokenizer
 from .char_tokenizer import CharTokenizer
 from .bpe_tokenizer import BPETokenizer
 
-__all__ = ["BaseTokenizer", "CharTokenizer", "BPETokenizer"]
+Tokenizer_REGISTRY = {
+    "CharTokenizer": CharTokenizer,
+    "BPETokenizer": BPETokenizer,
+    # "rnn_nlm": RNN_NLM,
+    # "transformer_lm": TransformerLM,
+}

@@ -1,9 +1,10 @@
 # configs/base_config.yaml
 
 # --- Data Configuration ---
-data_path: "data/poetry.json"
-tokenizer_path: "data/tokenizer.pkl"
-processed_data_path: "data/processed_data.pkl"
+data_dir: "data" # 数据集路径
+raw_data_dir: "raw" #原始数据路径
+processed_data_dir: "processed" # 预处理后的数据路径
+tokenizer_dir: "artifacts" # 分词器路径
 cleaner_type: "poetry"
 content_field: "contents"
 

@@ -6,10 +6,44 @@ from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
 from datetime import datetime
 
-from ..cleaners import create_text_cleaner, BaseTextCleaner
-from ..tokenization import CharTokenizer
-from ..utils import io
-from . import sequencing
+from .cleaners import create_text_cleaner, BaseTextCleaner
+from src.tokenization import CharTokenizer
+from src.utils import io
+
+
+logger = logging.getLogger(__name__)
+
+
+def create_sequences(
+    encoded_data: torch.Tensor, context_window: int
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    从编码数据创建训练序列对 (输入, 目标)。
+
+    Args:
+        encoded_data: 编码后的数据张量 (1D)。
+        context_window: 上下文窗口大小。
+
+    Returns:
+        (输入张量, 目标张量) 的元组。
+    """
+    if len(encoded_data) <= context_window:
+        raise ValueError(
+            f"数据长度 {len(encoded_data)} 必须大于上下文窗口 {context_window}"
+        )
+
+    num_sequences = len(encoded_data) - context_window
+    X = torch.stack(
+        [encoded_data[i : i + context_window] for i in range(num_sequences)]
+    )
+    Y = torch.stack(
+        [encoded_data[i + 1 : i + context_window + 1] for i in range(num_sequences)]
+    )
+
+    logger.info(
+        f"创建了 {num_sequences} 个序列对。输入形状: {X.shape}, 目标形状: {Y.shape}"
+    )
+    return X, Y
 
 
 class DataProcessor:
@@ -60,7 +94,7 @@ class DataProcessor:
 
         # 3. 编码和序列化
         encoded_data = torch.tensor(self.tokenizer.encode(full_text), dtype=torch.long)
-        X, Y = sequencing.create_sequences(encoded_data, context_window)
+        X, Y = create_sequences(encoded_data, context_window)
 
         # 4. 保存处理结果
         stats = self.text_cleaner.get_text_stats(cleaned_texts)

@@ -35,17 +35,23 @@ class LitLanguageModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss = self._calculate_loss(batch)
-        self.log("train_loss", loss)
+        perplexity = torch.exp(loss)
+        self.log("train_loss", loss, prog_bar=True)
+        self.log("train_perplexity", perplexity, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         loss = self._calculate_loss(batch)
+        perplexity = torch.exp(loss)
         self.log("val_loss", loss, prog_bar=True)
+        self.log("val_perplexity", perplexity, prog_bar=True)
         return loss
 
     def test_step(self, batch, batch_idx):
         loss = self._calculate_loss(batch)
+        perplexity = torch.exp(loss)
         self.log("test_loss", loss, prog_bar=True)
+        self.log("test_perplexity", perplexity)
         return loss
 
     def configure_optimizers(self):
