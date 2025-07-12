@@ -1,0 +1,24 @@
+# /configs/bigram.yaml
+# --------------------------------------------------
+# Bigram 模型的特定配置。
+# 它会加载 base_config.yaml，然后用以下值覆盖默认设置。
+# --------------------------------------------------
+
+# 将输出保存到专门的目录
+system:
+  work_dir: 'out/bigram'
+
+# Bigram 模型收敛速度快得多，不需要那么多训练步数
+training:
+  max_steps: 1000
+  eval_interval: 100 # 也可以更频繁地评估
+
+# 关键的模型类型覆盖
+model:
+  type: 'bigram'
+  # 注意：n_layer, n_head 等参数对于 Bigram 模型是无用的，
+  # 所以我们不需要在这里定义它们。
+
+# 简单的模型通常可以使用更高的学习率
+optimizer:
+  learning_rate: 0.01
