@@ -5,6 +5,7 @@ import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
 from dataclasses import dataclass
+from typing import Optional
 
 
 # 虽然这个配置类可以在其他地方定义（例如 configs 模块），
@@ -55,7 +56,7 @@ class LitBaseModel(pl.LightningModule, abc.ABC):
         self.weight_decay = weight_decay
 
     @abc.abstractmethod
-    def forward(self, idx: torch.Tensor, targets: torch.Tensor = None):
+    def forward(self, idx: torch.Tensor, targets: Optional[torch.Tensor] = None):
         """
         模型的前向传播。子类必须实现此方法。
 
