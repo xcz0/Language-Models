@@ -59,7 +59,7 @@ class CharDataset(Dataset):
         """将一个索引列表解码为字符串。"""
         return "".join(self.itos[i] for i in ix)
 
-    def __getitem__(self, idx: int) -> (torch.Tensor, torch.Tensor):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         """
         获取数据集中的一个样本。
 

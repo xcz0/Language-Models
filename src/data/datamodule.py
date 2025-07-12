@@ -2,7 +2,7 @@
 
 import torch
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Subset
 from typing import List, Optional
 from pathlib import Path
 
@@ -43,8 +43,8 @@ class CharDataModule(pl.LightningDataModule):
         self.words: Optional[List[str]] = None
         self.chars: Optional[List[str]] = None
         self.max_word_length: Optional[int] = None
-        self.train_dataset: Optional[CharDataset] = None
-        self.test_dataset: Optional[CharDataset] = None
+        self.train_dataset: Optional[Subset[CharDataset]] = None
+        self.test_dataset: Optional[Subset[CharDataset]] = None
 
     @property
     def vocab_size(self) -> int:
@@ -102,31 +102,30 @@ class CharDataModule(pl.LightningDataModule):
         print(f"Vocabulary: {''.join(self.chars)}")
         print("---------------------")
 
-        # 3. 拆分数据集为训练集和验证集
+        # 3. 将 self.words 转换为 CharDataset 类型
+        full_dataset = CharDataset(self.words, self.chars, self.max_word_length)
+
+        # 4. 拆分数据集为训练集和验证集
         test_size = min(self.test_set_size, int(len(self.words) * 0.1))
         train_size = len(self.words) - test_size
 
         # 使用固定的生成器以保证拆分的可复现性
-        train_words_ds, test_words_ds = random_split(
-            self.words,
+        self.train_dataset, self.test_dataset = random_split(
+            full_dataset,
             [train_size, test_size],
             generator=torch.Generator().manual_seed(42),
         )
 
         print(
-            f"Split dataset into {len(train_words_ds)} training and {len(test_words_ds)} test examples."
-        )
-
-        # 4. 创建 CharDataset 实例
-        self.train_dataset = CharDataset(
-            list(train_words_ds), self.chars, self.max_word_length
-        )
-        self.test_dataset = CharDataset(
-            list(test_words_ds), self.chars, self.max_word_length
+            f"Split dataset into {len(self.train_dataset)} training and {len(self.test_dataset)} test examples."
         )
 
     def train_dataloader(self) -> DataLoader:
         """创建并返回训练数据加载器。"""
+        if self.train_dataset is None:
+            raise RuntimeError(
+                "DataModule has not been set up yet. Call setup() first."
+            )
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -137,6 +136,10 @@ class CharDataModule(pl.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         """创建并返回验证数据加载器。"""
+        if self.test_dataset is None:
+            raise RuntimeError(
+                "DataModule has not been set up yet. Call setup() first."
+            )
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
