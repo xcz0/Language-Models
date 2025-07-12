@@ -1,0 +1,30 @@
+[project]
+name = "language-models"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml",
+    "torch",
+    "torchvision",
+    "torchviz",
+    "timm",
+    "lightning",
+    "torchmetrics",
+    "tensorboard",
+    "datasets",
+]
+
+
+
+[dependency-groups]
+dev = [
+    "ipykernel",
+    "ipywidgets",
+    "jupyter",
+    "kaggle",
+    "rich",
+    "rootutils",
+    "pytest",
+]
