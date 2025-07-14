@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader, random_split, Subset
 from typing import List, Optional
 from pathlib import Path
+from loguru import logger
 
 # 从同级目录的 dataset.py 文件中导入 CharDataset
 from .dataset import CharDataset
@@ -95,12 +96,12 @@ class CharDataModule(pl.LightningDataModule):
         self.chars = sorted(list(set("".join(self.words))))
         self.max_word_length = max(len(w) for w in self.words)
 
-        print("--- Dataset Stats ---")
-        print(f"Number of examples in the dataset: {len(self.words)}")
-        print(f"Max word length: {self.max_word_length}")
-        print(f"Number of unique characters: {len(self.chars)}")
-        print(f"Vocabulary: {''.join(self.chars)}")
-        print("---------------------")
+        logger.info("--- Dataset Stats ---")
+        logger.info(f"Number of examples in the dataset: {len(self.words)}")
+        logger.info(f"Max word length: {self.max_word_length}")
+        logger.info(f"Number of unique characters: {len(self.chars)}")
+        logger.info(f"Vocabulary: {''.join(self.chars)}")
+        logger.info("---------------------")
 
         # 3. 将 self.words 转换为 CharDataset 类型
         full_dataset = CharDataset(self.words, self.chars, self.max_word_length)
@@ -116,7 +117,7 @@ class CharDataModule(pl.LightningDataModule):
             generator=torch.Generator().manual_seed(42),
         )
 
-        print(
+        logger.info(
             f"Split dataset into {len(self.train_dataset)} training and {len(self.test_dataset)} test examples."
         )
 
