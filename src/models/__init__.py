@@ -1,7 +1,6 @@
 # src/models/__init__.py
 
 from typing import Type
-import torch.nn as nn
 
 from .base import ModelConfig
 from .base import LitBaseModel
@@ -40,4 +39,4 @@ def get_model_class(model_name: str) -> Type[LitBaseModel]:
 
 
 # 定义包的公共接口
-__all__ = ["LitBaseModel", "get_model_class", "MODELS"]
+__all__ = ["LitBaseModel", "get_model_class", "MODELS", "ModelConfig"]

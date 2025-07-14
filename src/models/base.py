@@ -2,7 +2,7 @@
 
 import abc
 import torch
-import pytorch_lightning as pl
+from pytorch_lightning import LightningModule
 import torch.nn.functional as F
 from dataclasses import dataclass
 from typing import Optional
@@ -20,7 +20,7 @@ class ModelConfig:
     n_embd2: int = 64
 
 
-class LitBaseModel(pl.LightningModule, abc.ABC):
+class LitBaseModel(LightningModule, abc.ABC):
     """
     一个抽象基类，继承自 LightningModule，为本项目所有模型提供通用框架。
 

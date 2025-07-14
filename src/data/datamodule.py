@@ -1,7 +1,7 @@
 # src/data/datamodule.py
 
 import torch
-import pytorch_lightning as pl
+from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, random_split, Subset
 from typing import List, Optional
 from pathlib import Path
@@ -11,7 +11,7 @@ from loguru import logger
 from .dataset import CharDataset
 
 
-class CharDataModule(pl.LightningDataModule):
+class CharDataModule(LightningDataModule):
     """
     一个 PyTorch Lightning DataModule，用于封装所有与字符数据相关的操作。
     """

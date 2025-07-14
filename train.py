@@ -4,7 +4,7 @@ import os
 import argparse
 import pickle
 import yaml
-import pytorch_lightning as pl
+from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -46,7 +46,7 @@ def main(config: dict):
     """主训练函数"""
 
     # 1. 设置随机种子
-    pl.seed_everything(config["system"]["seed"], workers=True)
+    seed_everything(config["system"]["seed"], workers=True)
 
     # 2. 初始化 DataModule
     datamodule = CharDataModule(
@@ -97,7 +97,7 @@ def main(config: dict):
     )
 
     # 7. 初始化 Trainer
-    trainer = pl.Trainer(
+    trainer = Trainer(
         max_steps=config["training"]["max_steps"],
         val_check_interval=config["training"]["eval_interval"],
         logger=logger,
