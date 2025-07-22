@@ -1,0 +1,28 @@
+# configs/bow.yaml
+# --------------------------------------------------
+# BoW (Bag-of-Words) 模型的特定配置。
+# 基于因果词袋机制，通过平均过去所有token的嵌入来预测下一个token。
+# 它会加载 base_config.yaml，然后用以下值覆盖默认设置。
+# --------------------------------------------------
+
+# 将输出保存到专门的目录
+system:
+  work_dir: 'out/bow'
+
+# BoW 模型的训练配置
+training:
+  max_steps: 3000        # BoW 模型复杂度适中，需要适量训练步数
+
+# BoW 模型的关键参数
+model:
+  type: 'bow'
+  # 词嵌入维度 - BoW 模型的主要特征维度
+  n_embd: 64             # 词嵌入向量的维度
+  # MLP 隐藏层维度 - 用于 BoWBlock 中的小型 MLP
+  n_embd2: 128           # MLP 隐藏层的维度，通常比 n_embd 大一些以增加模型容量
+  # 注意：block_size 和 vocab_size 由 DataModule 根据数据自动确定
+
+# BoW 模型适合中等学习率
+optimizer:
+  learning_rate: 0.001   # 1e-3，比 Transformer 稍高，比 Bigram 稍低
+  weight_decay: 0.01     # 保持适度的权重衰减
