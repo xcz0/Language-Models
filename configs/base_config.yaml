@@ -27,13 +27,8 @@ training:
     log_every_n_steps: 10
 
 # 模型架构的默认参数
-# 这些参数主要用于 Transformer，但为其他模型提供了默认值
 model:
-  type: 'transformer'    # 默认使用的模型类型
-  n_layer: 4
-  n_head: 4
-  n_embd: 64
-  n_embd2: 64            # 对于 RNN/MLP 等模型的次要嵌入维度
+
 
 # 优化器配置
 optimizer:
