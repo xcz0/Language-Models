@@ -3,11 +3,11 @@
 import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, random_split, Subset
-from typing import List, Optional
+from typing import Optional
 from pathlib import Path
 from loguru import logger
 
-# 从同级目录的 dataset.py 文件中导入 CharDataset
+
 from .dataset import CharDataset
 
 
@@ -41,8 +41,8 @@ class CharDataModule(LightningDataModule):
         self.test_set_size = test_set_size
 
         # 这些属性将在 setup() 方法中被赋值
-        self.words: Optional[List[str]] = None
-        self.chars: Optional[List[str]] = None
+        self.words: Optional[list[str]] = None
+        self.chars: Optional[list[str]] = None
         self.max_word_length: Optional[int] = None
         self.train_dataset: Optional[Subset[CharDataset]] = None
         self.test_dataset: Optional[Subset[CharDataset]] = None

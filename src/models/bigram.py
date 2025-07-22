@@ -4,29 +4,25 @@ import torch
 import torch.nn as nn
 from typing import Optional, Tuple
 
-# 从同级目录的 base.py 中导入基类和配置类
-from .base import LitBaseModel, ModelConfig
+from .base import LitBaseModel, ModelConfig, AdamConfig
 
 
 class Bigram(LitBaseModel):
     """
     Bigram (二元) 语言模型。
 
-    这是最简单的神经语言模型，它仅通过一个可训练的查找表
-    来预测基于前一个字符的下一个字符的 logits。
-    它的上下文窗口 `block_size` 实际上是 1，但它能够处理
-    由 DataModule 提供的更长的序列输入，只是在预测时只使用最后一个字符。
+    这是最简单的神经语言模型，它仅通过一个可训练的查找表来预测基于前一个字符的下一个字符的 logits。它的上下文窗口 `block_size` 实际上是 1，但它能够处理由 DataModule 提供的更长的序列输入，只是在预测时只使用最后一个字符。
     """
 
-    def __init__(self, config: ModelConfig, **kwargs):
+    def __init__(self, config: ModelConfig, optim_config: Optional[AdamConfig] = None):
         """
         初始化 Bigram 模型。
 
         Args:
             config (ModelConfig): 模型配置对象。
-            **kwargs: 其他传递给基类的参数，如 learning_rate。
+            optim_config (AdamConfig, optional): 优化器配置。
         """
-        super().__init__(config, **kwargs)
+        super().__init__(config, optim_config)
 
         # Bigram 模型的核心就是一个大小为 (vocab_size, vocab_size) 的查找表。
         self.logits_table = nn.Parameter(
@@ -34,7 +30,7 @@ class Bigram(LitBaseModel):
         )
 
     def forward(
-        self, idx: torch.Tensor, targets: torch.Tensor = None
+        self, idx: torch.Tensor, targets: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         Bigram 模型的前向传播。
@@ -59,8 +55,6 @@ class Bigram(LitBaseModel):
 
     def get_block_size(self) -> int:
         """
-        覆盖基类方法。Bigram 模型的有效上下文大小为 1。
-        尽管我们仍然可以从配置中返回 block_size 以保持与数据管道的兼容性，
-        但明确指出其理论大小是有益的。
+        覆盖基类方法。Bigram 模型的有效上下文大小为 1。尽管我们仍然可以从配置中返回 block_size 以保持与数据管道的兼容性，但明确指出其理论大小是有益的。
         """
         return 1

@@ -2,7 +2,6 @@
 
 import torch
 from torch.utils.data import Dataset
-from typing import List
 
 
 class CharDataset(Dataset):
@@ -15,7 +14,7 @@ class CharDataset(Dataset):
        在序列末尾使用 -1 进行填充，以便在计算损失时忽略这些位置。
     """
 
-    def __init__(self, words: List[str], chars: List[str], max_word_length: int):
+    def __init__(self, words: list[str], chars: list[str], max_word_length: int):
         """
         初始化数据集。
 
@@ -51,11 +50,11 @@ class CharDataset(Dataset):
         """返回模型的输出序列长度（包含<START>标记）。"""
         return self.max_word_length + 1
 
-    def encode(self, word: str) -> List[int]:
+    def encode(self, word: str) -> list[int]:
         """将一个字符串编码为索引列表。"""
         return [self.stoi[w] for w in word]
 
-    def decode(self, ix: List[int]) -> str:
+    def decode(self, ix: list[int]) -> str:
         """将一个索引列表解码为字符串。"""
         return "".join(self.itos[i] for i in ix)
 

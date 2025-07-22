@@ -16,8 +16,7 @@ training:
 # 关键的模型类型覆盖
 model:
   type: 'bigram'
-  # 注意：n_layer, n_head 等参数对于 Bigram 模型是无用的，
-  # 所以我们不需要在这里定义它们。
+  # 注意：n_layer, n_head 等参数对于 Bigram 模型是无用的，所以我们不需要在这里定义它们。
 
 # 简单的模型通常可以使用更高的学习率
 optimizer:
