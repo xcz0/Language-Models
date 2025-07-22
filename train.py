@@ -7,6 +7,7 @@ import yaml
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
+from loguru import logger
 
 from src.data import CharDataModule
 from src.models import get_model_class, ModelConfig
@@ -31,12 +32,12 @@ def load_config(config_path: str) -> dict:
     with open(base_config_path, "r") as f:
         config = yaml.safe_load(f)
 
-    print(f"Loaded base config from {base_config_path}")
+    logger.info(f"Loaded base config from {base_config_path}")
 
     with open(config_path, "r") as f:
         override_config = yaml.safe_load(f)
 
-    print(f"Loaded and merging override config from {config_path}")
+    logger.info(f"Loaded and merging override config from {config_path}")
 
     config = deep_update(config, override_config)
     return config
@@ -63,7 +64,7 @@ def main(config: dict):
     vocab_path = os.path.join(work_dir, "vocab.pkl")
     with open(vocab_path, "wb") as f:
         pickle.dump({"chars": datamodule.chars}, f)
-    print(f"Vocabulary saved to {vocab_path}")
+    logger.info(f"Vocabulary saved to {vocab_path}")
 
     # 4. 创建模型配置
     model_params = config["model"].copy()
@@ -74,21 +75,28 @@ def main(config: dict):
         **model_params,  # 传入除了 type 之外的模型参数
     )
 
-    # 5. 实例化模型
-    model_class = get_model_class(model_type)
-    model = model_class(
-        config=model_config,
+    # 5. 创建优化器配置
+    from src.models.base import AdamConfig
+
+    optim_config = AdamConfig(
         learning_rate=config["optimizer"]["learning_rate"],
         weight_decay=config["optimizer"]["weight_decay"],
     )
-    print(
+
+    # 6. 实例化模型
+    model_class = get_model_class(model_type)
+    model = model_class(
+        config=model_config,
+        optim_config=optim_config,
+    )
+    logger.info(
         f"Initialized model '{model_type}' with {sum(p.numel() for p in model.parameters()):,} parameters."
     )
 
-    # 6. 配置 Callbacks 和 Logger
-    logger = TensorBoardLogger(save_dir=work_dir, name=None, version="logs")
+    # 7. 配置 Callbacks 和 Logger
+    tb_logger = TensorBoardLogger(save_dir=work_dir, name=None, version="logs")
     checkpoint_callback = ModelCheckpoint(
-        dirpath=os.path.join(logger.log_dir, "checkpoints"),
+        dirpath=os.path.join(tb_logger.log_dir, "checkpoints"),
         filename="{step}-{val_loss:.2f}-best",
         monitor="val_loss",
         mode="min",
@@ -96,19 +104,19 @@ def main(config: dict):
         verbose=True,
     )
 
-    # 7. 初始化 Trainer
+    # 8. 初始化 Trainer
     trainer = Trainer(
         max_steps=config["training"]["max_steps"],
         val_check_interval=config["training"]["eval_interval"],
-        logger=logger,
+        logger=tb_logger,
         callbacks=[checkpoint_callback],
         **config["training"]["trainer_args"],  # 传入 trainer 特定参数
     )
 
-    # 8. 启动训练
-    print(f"Starting training for {config['training']['max_steps']} steps...")
+    # 9. 启动训练
+    logger.info(f"Starting training for {config['training']['max_steps']} steps...")
     trainer.fit(model, datamodule=datamodule)
-    print("Training finished.")
+    logger.info("Training finished.")
 
 
 if __name__ == "__main__":

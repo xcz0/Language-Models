@@ -5,6 +5,7 @@ import argparse
 import os
 import pickle
 import torch.nn.functional as F
+from loguru import logger
 
 from src.models import get_model_class
 
@@ -74,12 +75,12 @@ def main(args):
     model.to(args.device)
     model.eval()  # 设置为评估模式
 
-    print(f"Model loaded from {args.checkpoint_path}")
-    print(f"Model #params: {sum(p.numel() for p in model.parameters()):,}")
+    logger.info(f"Model loaded from {args.checkpoint_path}")
+    logger.info(f"Model #params: {sum(p.numel() for p in model.parameters()):,}")
 
     # 3. 生成样本
-    print("-" * 80)
-    print(f"Generating {args.num_samples} samples...")
+    logger.info("-" * 80)
+    logger.info(f"Generating {args.num_samples} samples...")
 
     # 起始标记 <START> (索引为 0)
     start_token = torch.zeros(args.num_samples, 1, dtype=torch.long, device=args.device)
@@ -99,9 +100,9 @@ def main(args):
             row = row[: row.index(0)]
 
         word_samp = "".join(itos[j] for j in row)
-        print(word_samp)
+        logger.info(word_samp)
 
-    print("-" * 80)
+    logger.info("-" * 80)
 
 
 if __name__ == "__main__":
