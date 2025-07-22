@@ -1,0 +1,29 @@
+# configs/mlp.yaml
+# --------------------------------------------------
+# MLP (Multi-Layer Perceptron) 模型的特定配置。
+# 基于 Bengio 等人 2003 年的经典神经语言模型论文。
+# 它会加载 base_config.yaml，然后用以下值覆盖默认设置。
+# --------------------------------------------------
+
+# 将输出保存到专门的目录
+system:
+  work_dir: 'out/mlp'
+
+# MLP 模型的训练配置
+training:
+  max_steps: 5000        # MLP 相对简单，不需要太多训练步数
+  eval_interval: 200     # 每200步评估一次
+
+# MLP 模型的关键参数
+model:
+  type: 'mlp'
+  # 注意：block_size 由 DataModule 根据数据自动确定，无需在这里指定
+  # 词嵌入维度
+  n_embd: 64             # 词嵌入向量的维度
+  # MLP 隐藏层维度
+  n_embd2: 128           # MLP 隐藏层的维度，通常比 n_embd 大一些
+
+# MLP 适合稍微高一点的学习率，但不像 Bigram 那么高
+optimizer:
+  learning_rate: 0.001   # 1e-3，比默认的 5e-4 稍高
+  weight_decay: 0.01
