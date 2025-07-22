@@ -12,6 +12,7 @@ system:
 # RNN 模型的训练配置
 training:
   max_steps: 8000        # RNN 需要较多步数来学习时序依赖
+  eval_interval: 400     # 每400步评估一次
 
 # RNN 模型的关键参数
 model:
