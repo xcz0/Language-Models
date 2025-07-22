@@ -12,7 +12,6 @@ system:
 # MLP 模型的训练配置
 training:
   max_steps: 5000        # MLP 相对简单，不需要太多训练步数
-  eval_interval: 200     # 每200步评估一次
 
 # MLP 模型的关键参数
 model:
