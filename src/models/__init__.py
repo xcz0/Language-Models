@@ -5,14 +5,22 @@ from typing import Type
 from .base import ModelConfig
 from .base import LitBaseModel
 from .bigram import Bigram
+from .mlp import MLP
+from .rnn import RNN
+from .bow import BoW
+from .GPT import GPT
+
 # 当添加新模型时，只需在这里导入它们
-# from .mlp import MLP
+
 # from .transformer import Transformer
 
 # 定义一个模型注册表（字典）
 MODELS = {
     "bigram": Bigram,
-    # "mlp": MLP,
+    "mlp": MLP,
+    "rnn": RNN,
+    "bow": BoW,
+    "gpt": GPT,
     # "transformer": Transformer,
 }
 
