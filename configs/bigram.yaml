@@ -11,7 +11,6 @@ system:
 # Bigram 模型收敛速度快得多，不需要那么多训练步数
 training:
   max_steps: 1000
-  eval_interval: 100 # 也可以更频繁地评估
 
 # 关键的模型类型覆盖
 model:

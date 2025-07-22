@@ -19,7 +19,7 @@ data:
 # 训练器 (PyTorch Lightning Trainer) 配置
 training:
   max_steps: 10000       # 默认训练步数
-  eval_interval: 500     # 每500步进行一次验证
+  eval_interval: 1     # 每500步进行一次验证
   # 传递给 pl.Trainer 的额外参数
   trainer_args:
     accelerator: 'auto'  # 自动检测 'cpu', 'cuda', 'mps'
